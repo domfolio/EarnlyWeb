@@ -9,6 +9,7 @@ import ManageJobs from "./pages/ManageJobs";
 import ResetPassword from "./pages/ResetPassword";
 import Setup from "./pages/Setup";
 import SignUp from "./pages/SignUp";
+import TopProgressBar from "./components/TopProgressBar";
 import { useAuth } from "./context/AuthContext";
 import { clearWeek, getWeek, upsertEntry } from "./services/earnlyApi";
 import { createEmptyEntries } from "./utils/calculations";
@@ -198,7 +199,9 @@ function App() {
   }
 
   return (
-    <Routes>
+    <>
+      <TopProgressBar />
+      <Routes>
       <Route path="/" element={<RootRedirect authLoading={authLoading} isAuthenticated={isAuthenticated} />} />
       <Route
         path="/login"
@@ -281,7 +284,8 @@ function App() {
         }
       />
       <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+      </Routes>
+    </>
   );
 }
 
