@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Navigate, Route, Routes, useNavigate } from "react-router-dom";
 import AddJob from "./pages/AddJob";
 import Dashboard from "./pages/Dashboard";
@@ -85,6 +85,8 @@ function App() {
     [jobs, selectedJobId]
   );
 
+  const weekCacheRef = useRef(new Map());
+
   useEffect(() => {
     let cancelled = false;
 
@@ -94,12 +96,25 @@ function App() {
         return;
       }
 
-      try {
+      const cacheKey = `${selectedJob.id}:${selectedWeekKey}`;
+      const cached = weekCacheRef.current.get(cacheKey);
+
+      setAppError("");
+      if (cached) {
+        // Show the previously loaded week instantly, then refresh quietly in the background.
+        setSelectedWeekEntries(cached);
+      } else {
+        // No cache yet: render the empty week grid immediately so the table isn't blank while loading.
+        setSelectedWeekEntries(createEmptyEntries(selectedJob.defaultHourlyRate));
         setWeekLoading(true);
-        setAppError("");
+      }
+
+      try {
         const payload = await getWeek(selectedJob.id, selectedWeekKey);
         if (!cancelled) {
-          setSelectedWeekEntries(payload.entries ?? createEmptyEntries(selectedJob.defaultHourlyRate));
+          const entries = payload.entries ?? createEmptyEntries(selectedJob.defaultHourlyRate);
+          weekCacheRef.current.set(cacheKey, entries);
+          setSelectedWeekEntries(entries);
         }
       } catch (error) {
         if (!cancelled) setAppError(error.message || "Unable to load this week.");
@@ -175,10 +190,9 @@ function App() {
     try {
       const workDate = formatDateKey(getDateForDay(dayKey, selectedWeekKey));
       const payload = await upsertEntry(selectedJob.id, workDate, patch);
-      setSelectedWeekEntries((currentEntries) => ({
-        ...currentEntries,
-        [dayKey]: payload.entry,
-      }));
+      const savedEntries = { ...previousEntries, [dayKey]: payload.entry };
+      setSelectedWeekEntries(savedEntries);
+      weekCacheRef.current.set(`${selectedJob.id}:${selectedWeekKey}`, savedEntries);
       setAppError("");
     } catch (error) {
       setSelectedWeekEntries(previousEntries);
@@ -191,7 +205,9 @@ function App() {
 
     try {
       const payload = await clearWeek(selectedJob.id, selectedWeekKey);
-      setSelectedWeekEntries(payload.entries ?? createEmptyEntries(selectedJob.defaultHourlyRate));
+      const clearedEntries = payload.entries ?? createEmptyEntries(selectedJob.defaultHourlyRate);
+      setSelectedWeekEntries(clearedEntries);
+      weekCacheRef.current.set(`${selectedJob.id}:${selectedWeekKey}`, clearedEntries);
       setAppError("");
     } catch (error) {
       setAppError(error.message || "Unable to clear this week.");
