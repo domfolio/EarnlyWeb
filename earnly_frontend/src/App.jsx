@@ -32,9 +32,10 @@ function RequireAuth({ isAuthenticated, authLoading, children }) {
   return children;
 }
 
-function RequireSetup({ isAuthenticated, authLoading, hasCompletedSetup, children }) {
+function RequireSetup({ isAuthenticated, authLoading, profileLoading, hasCompletedSetup, children }) {
   if (authLoading) return <LoadingScreen />;
   if (!isAuthenticated) return <Navigate to="/login" replace />;
+  if (profileLoading) return <LoadingScreen />;
   if (!hasCompletedSetup) return <Navigate to="/setup" replace />;
   return children;
 }
@@ -59,6 +60,7 @@ function App() {
     selectedJobId,
     hasCompletedSetup,
     loading: authLoading,
+    profileLoading,
     error: authError,
     signIn,
     signUp,
@@ -201,7 +203,7 @@ function App() {
       <Route
         path="/login"
         element={
-          authLoading ? (
+          authLoading || (isAuthenticated && profileLoading) ? (
             <LoadingScreen />
           ) : isAuthenticated ? (
             <Navigate to={hasCompletedSetup ? "/dashboard" : "/setup"} replace />
@@ -224,7 +226,7 @@ function App() {
       <Route
         path="/dashboard"
         element={
-          <RequireSetup isAuthenticated={isAuthenticated} authLoading={authLoading} hasCompletedSetup={hasCompletedSetup}>
+          <RequireSetup isAuthenticated={isAuthenticated} authLoading={authLoading} profileLoading={profileLoading} hasCompletedSetup={hasCompletedSetup}>
             <Dashboard
               jobs={jobs}
               selectedJob={selectedJob}
@@ -245,7 +247,7 @@ function App() {
       <Route
         path="/entry/:dayKey"
         element={
-          <RequireSetup isAuthenticated={isAuthenticated} authLoading={authLoading} hasCompletedSetup={hasCompletedSetup}>
+          <RequireSetup isAuthenticated={isAuthenticated} authLoading={authLoading} profileLoading={profileLoading} hasCompletedSetup={hasCompletedSetup}>
             <Entry
               selectedJob={selectedJob}
               selectedWeekKey={selectedWeekKey}
@@ -259,7 +261,7 @@ function App() {
       <Route
         path="/jobs/add"
         element={
-          <RequireSetup isAuthenticated={isAuthenticated} authLoading={authLoading} hasCompletedSetup={hasCompletedSetup}>
+          <RequireSetup isAuthenticated={isAuthenticated} authLoading={authLoading} profileLoading={profileLoading} hasCompletedSetup={hasCompletedSetup}>
             <AddJob onAddJob={addJob} />
           </RequireSetup>
         }
@@ -267,7 +269,7 @@ function App() {
       <Route
         path="/jobs/manage"
         element={
-          <RequireSetup isAuthenticated={isAuthenticated} authLoading={authLoading} hasCompletedSetup={hasCompletedSetup}>
+          <RequireSetup isAuthenticated={isAuthenticated} authLoading={authLoading} profileLoading={profileLoading} hasCompletedSetup={hasCompletedSetup}>
             <ManageJobs
               jobs={jobs}
               selectedJobId={selectedJobId}

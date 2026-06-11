@@ -23,6 +23,7 @@ export function AuthProvider({ children }) {
   const [profile, setProfile] = useState(null);
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [profileLoading, setProfileLoading] = useState(false);
   const [error, setError] = useState("");
 
   const applyMe = useCallback((payload) => {
@@ -36,11 +37,21 @@ export function AuthProvider({ children }) {
     setUser(null);
     setProfile(null);
     setJobs([]);
+    setProfileLoading(false);
   }, []);
 
   const refreshMe = useCallback(async () => {
-    const payload = await getMe();
-    return applyMe(payload);
+    try {
+      setProfileLoading(true);
+      const payload = await getMe();
+      setError("");
+      return applyMe(payload);
+    } catch (refreshError) {
+      setError(refreshError.message || "Unable to load your profile.");
+      throw refreshError;
+    } finally {
+      setProfileLoading(false);
+    }
   }, [applyMe]);
 
   useEffect(() => {
@@ -52,11 +63,12 @@ export function AuthProvider({ children }) {
         if (sessionError) throw sessionError;
         if (!isMounted) return;
 
-        setSession(data.session ?? null);
-
         if (data.session) {
+          setProfileLoading(true);
+          setSession(data.session);
           await refreshMe();
         } else {
+          setSession(null);
           clearAppState();
         }
       } catch (loadError) {
@@ -69,11 +81,24 @@ export function AuthProvider({ children }) {
     loadSession();
 
     const { data: subscription } = supabase.auth.onAuthStateChange(async (_event, nextSession) => {
-      setSession(nextSession ?? null);
-      if (!nextSession) {
-        clearAppState();
-        setLoading(false);
+      if (!isMounted) return;
+
+      if (nextSession) {
+        setProfileLoading(true);
+        setSession(nextSession);
+
+        try {
+          await refreshMe();
+        } catch {
+          // refreshMe records the error for the UI; keep the auth session intact.
+        }
+
+        return;
       }
+
+      setSession(nextSession ?? null);
+      clearAppState();
+      setLoading(false);
     });
 
     return () => {
@@ -187,6 +212,7 @@ export function AuthProvider({ children }) {
       selectedJobId,
       hasCompletedSetup,
       loading,
+      profileLoading,
       error,
       refreshMe,
       signIn,
@@ -208,6 +234,7 @@ export function AuthProvider({ children }) {
       selectedJobId,
       hasCompletedSetup,
       loading,
+      profileLoading,
       error,
       refreshMe,
       signIn,
