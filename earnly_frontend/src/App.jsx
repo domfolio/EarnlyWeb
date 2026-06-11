@@ -53,6 +53,14 @@ function formatDateKey(date) {
   return `${year}-${month}-${day}`;
 }
 
+function hasInvalidTimeRange(entry = {}) {
+  return Boolean(entry.startTime && entry.endTime && entry.endTime < entry.startTime);
+}
+
+function includesTimePatch(patch = {}) {
+  return Object.prototype.hasOwnProperty.call(patch, "startTime") || Object.prototype.hasOwnProperty.call(patch, "endTime");
+}
+
 function App() {
   const navigate = useNavigate();
   const {
@@ -191,9 +199,24 @@ function App() {
       [dayKey]: nextEntry,
     }));
 
+    if (hasInvalidTimeRange(nextEntry)) {
+      setAppError("");
+      return;
+    }
+
+    const patchToSave = includesTimePatch(patch)
+      ? {
+          startTime: nextEntry.startTime || "",
+          endTime: nextEntry.endTime || "",
+          breakMinutes: nextEntry.breakMinutes ?? 0,
+          hourlyRate: nextEntry.hourlyRate ?? "",
+          notes: nextEntry.notes || "",
+        }
+      : patch;
+
     try {
       const workDate = formatDateKey(getDateForDay(dayKey, selectedWeekKey));
-      const payload = await upsertEntry(selectedJob.id, workDate, patch);
+      const payload = await upsertEntry(selectedJob.id, workDate, patchToSave);
       const savedEntries = { ...previousEntries, [dayKey]: payload.entry };
       setSelectedWeekEntries(savedEntries);
       weekCacheRef.current.set(`${selectedJob.id}:${selectedWeekKey}`, savedEntries);

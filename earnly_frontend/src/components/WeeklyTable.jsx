@@ -5,6 +5,10 @@ import { getDateForDay, formatShortDate, WEEK_DAYS } from "../utils/dateHelpers"
 
 const BREAK_OPTIONS = [0, 15, 30, 45, 60, 90, 120];
 
+function hasInvalidTimeRange(entry = {}) {
+  return Boolean(entry.startTime && entry.endTime && entry.endTime < entry.startTime);
+}
+
 function WeeklyTable({ entries, defaultHourlyRate, selectedWeekKey, onEntryChange }) {
   const navigate = useNavigate();
 
@@ -41,9 +45,15 @@ function WeeklyTable({ entries, defaultHourlyRate, selectedWeekKey, onEntryChang
           {WEEK_DAYS.map((day) => {
             const entry = entries[day.key] ?? {};
             const pay = calculateEntryPay(entry, defaultHourlyRate);
+            const hasInvalidTimes = hasInvalidTimeRange(entry);
 
             return (
-              <tr key={day.key} onClick={() => navigate(`/entry/${day.key}`)} tabIndex="0">
+              <tr
+                key={day.key}
+                className={hasInvalidTimes ? "weekly-table__row--invalid" : ""}
+                onClick={() => navigate(`/entry/${day.key}`)}
+                tabIndex="0"
+              >
                 <td>
                   <span className="weekly-table__day">{day.short}</span>
                   <span className="weekly-table__date">{formatShortDate(getDateForDay(day.key, selectedWeekKey))}</span>
@@ -59,6 +69,7 @@ function WeeklyTable({ entries, defaultHourlyRate, selectedWeekKey, onEntryChang
                 <td onClick={handleTimeClick}>
                   <TimePicker
                     value={entry.endTime || ""}
+                    minTime={entry.startTime || ""}
                     onChange={(event) => updateEntry(day.key, { endTime: event.target.value })}
                     ariaLabel={`${day.label} end time`}
                     className="time-picker--table"

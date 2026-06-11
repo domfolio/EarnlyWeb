@@ -158,3 +158,85 @@ Then summarise the final architecture in a few sentences I can use in my demo vi
 - Briefly explain the architecture and **show env vars in Vercel** to prove credentials are secure.
 - Walk through the **GitHub repo structure and .gitignore** (keep this under 45 seconds).
 - Show a few **key prompts** (this file) as your prompt walkthrough / appendix.
+
+---
+
+# Appendix B — Iteration, fixes & feature prompts
+
+These are the prompts used after the initial build, in roughly the order they were run. A few small
+fixes were applied directly to the files rather than via a prompt; those are listed at the end of
+this appendix for full transparency.
+
+## Deployment & GitHub
+
+**Prompt — fix "Failed to fetch" (backend wiring):**
+> The app shows "Failed to fetch" on the setup form. Fix three issues: (1) the backend config loads
+> from `.env.local` but my credentials are in `.env` — create `earnly_backend/.env.local`; (2) the
+> frontend calls `/setup`, `/me`, `/jobs` but the backend mounts routes under `/api`, so set
+> `VITE_API_BASE_URL=http://localhost:8000/api`; (3) give me the exact commands to run the FastAPI
+> backend locally on port 8000, and remind me to run the Supabase schema SQL.
+
+**Prompt — GitHub + Vercel deployment:** one GitHub repo at the root, deployed as two Vercel
+projects (Root Directory `earnly_backend` and `earnly_frontend`). Included: a full security scan for
+hardcoded secrets, `.gitignore` verification, `git init`/commit/push commands, and a `DEPLOYMENT.md`
+guide covering the env vars to set in Vercel, the cross-origin `VITE_API_BASE_URL`/`CORS_ALLOWED_ORIGINS`
+values, and the Supabase Site URL / Redirect URL updates for production.
+
+## UI & UX fixes
+
+**Prompt — fix setup-page flash on login:** in `src/App.jsx`, use the existing `profileLoading`
+flag so the route guards (`RequireSetup`, `/login` redirect, `RootRedirect`) show the loading screen
+while the profile loads instead of briefly redirecting to `/setup`.
+
+**Prompt — responsiveness:** add loading/disabled states on actions, a global top progress bar tied
+to in-flight API requests, and a `loading` prop with spinner on the Button component.
+
+**Prompt — week caching:** cache fetched weeks (stale-while-revalidate) so revisiting a week is
+instant and the table never goes blank while loading.
+
+**Prompt — "This week" button + field alignment:** add a small pill button by the week arrows that
+jumps to the current week; centre-align the Break Time and Hourly Rate fields on the day detail page.
+
+**Prompt — static week-range box:** give the week range pill a fixed width so it doesn't resize with
+date length.
+
+**Prompt — rounded table header corners:** round the top corners of the weekly table header to match
+the shell.
+
+## Time picker (iterated)
+
+**Prompt — custom two-dropdown time picker** for Start/End on all days and the detail page, keeping
+the stored value in `HH:MM` format.
+
+**Prompt — popover style** (two scrollable finite columns of hours 00–23 and minutes 00–59, selected
+value highlighted), replacing the plain dropdowns.
+
+**Prompt — `--:--` placeholder + direct typing:** empty fields show `--:--` (not `00:00`); the user
+can type digits left to right (e.g. 9,3,0 → 09:30; 2,0,3,0 → 20:30); empty stays empty.
+
+## Export feature
+
+**Manual step:** `npm install xlsx` in `earnly_frontend`.
+
+**Prompt 1 — `src/utils/exportData.js` data gathering:** `gatherEntriesInRange(jobId, startDate,
+endDate)` fetches each week in range via `getWeek`, maps day keys to real dates, filters to the
+range, and returns row objects (date, day, start, end, break, hours, rate, pay, notes).
+
+**Prompt 2 — CSV/XLSX download helpers:** `downloadCsv` and `downloadXlsx(rows, {includeBreaks,
+includeNotes})`, with `xlsx` lazy-loaded via dynamic import to keep the bundle small.
+
+**Prompt 3 — export dialog UI** in the Dashboard: range presets (Last 7 days, Last 2 weeks, This
+week), Start/End date inputs, on/off toggles for Include breaks / Include notes, CSV vs XLSX format,
+and an Export button wired to the export utilities.
+
+**Prompt — export settings layout:** stack the two settings toggles into two rows instead of one.
+
+**Prompt — smooth Notes typing:** back the Notes textarea with local state and debounce the save
+(~500ms + on blur) instead of saving on every keystroke.
+
+## Small fixes applied directly to files (not via Cline)
+
+For completeness: the following minor edits were made directly rather than through a Cline prompt —
+the `App.jsx` setup-flash guard wiring, the global progress bar + Button spinner, the week-cache
+logic, the Break/Hourly-Rate alignment CSS, the rounded header-corner CSS, the static week-range
+width, and the `dd-mm-yyyy` date formatting in the export Date column.

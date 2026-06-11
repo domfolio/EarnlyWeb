@@ -97,15 +97,18 @@ function createChangeEvent(value) {
   };
 }
 
-function TimePicker({ label, value, onChange, ariaLabel, className = "" }) {
+function TimePicker({ label, value, minTime = "", onChange, ariaLabel, className = "" }) {
   const rootRef = useRef(null);
   const safeValue = normaliseSavedTime(value);
+  const minimumTime = normaliseSavedTime(minTime);
   const [draftDigits, setDraftDigits] = useState(() => getDigitsFromValue(safeValue));
   const [isOpen, setIsOpen] = useState(false);
   const timeState = getTimeState(draftDigits);
   const safeTimeState = getTimeState(getDigitsFromValue(safeValue));
-  const selectedHour = timeState.hour || safeTimeState.hour || "00";
-  const selectedMinute = timeState.minute || safeTimeState.minute || "00";
+  const selectedTime = timeState.isComplete ? timeState.value : safeValue;
+  const popoverSelectedTime = minimumTime && (!selectedTime || selectedTime < minimumTime) ? minimumTime : selectedTime || "00:00";
+  const [selectedHour, selectedMinute] = popoverSelectedTime.split(":");
+  const [minimumHour, minimumMinute] = minimumTime ? minimumTime.split(":") : ["", ""];
   const accessibleLabel = ariaLabel || label || "Time";
 
   useEffect(() => {
@@ -185,7 +188,8 @@ function TimePicker({ label, value, onChange, ariaLabel, className = "" }) {
   }
 
   function updateHour(nextHour) {
-    const nextValue = `${nextHour}:${selectedMinute}`;
+    const nextMinute = minimumTime && nextHour === minimumHour && selectedMinute < minimumMinute ? minimumMinute : selectedMinute;
+    const nextValue = `${nextHour}:${nextMinute}`;
     setDraftDigits(getDigitsFromValue(nextValue));
     emitChange(nextValue);
   }
@@ -228,32 +232,42 @@ function TimePicker({ label, value, onChange, ariaLabel, className = "" }) {
       {isOpen ? (
         <div className="time-picker__popover" role="dialog" aria-label={`${accessibleLabel} picker`}>
           <div className="time-picker__column" role="listbox" aria-label={`${accessibleLabel} hours`}>
-            {HOURS.map((option) => (
-              <button
-                key={option}
-                type="button"
-                className={`time-picker__option ${option === selectedHour ? "time-picker__option--active" : ""}`.trim()}
-                onClick={() => updateHour(option)}
-                role="option"
-                aria-selected={option === selectedHour}
-              >
-                {option}
-              </button>
-            ))}
+            {HOURS.map((option) => {
+              const isDisabled = Boolean(minimumTime && option < minimumHour);
+
+              return (
+                <button
+                  key={option}
+                  type="button"
+                  className={`time-picker__option ${option === selectedHour ? "time-picker__option--active" : ""} ${isDisabled ? "time-picker__option--disabled" : ""}`.trim()}
+                  onClick={() => updateHour(option)}
+                  role="option"
+                  aria-selected={option === selectedHour}
+                  disabled={isDisabled}
+                >
+                  {option}
+                </button>
+              );
+            })}
           </div>
           <div className="time-picker__column" role="listbox" aria-label={`${accessibleLabel} minutes`}>
-            {MINUTES.map((option) => (
-              <button
-                key={option}
-                type="button"
-                className={`time-picker__option ${option === selectedMinute ? "time-picker__option--active" : ""}`.trim()}
-                onClick={() => updateMinute(option)}
-                role="option"
-                aria-selected={option === selectedMinute}
-              >
-                {option}
-              </button>
-            ))}
+            {MINUTES.map((option) => {
+              const isDisabled = Boolean(minimumTime && selectedHour === minimumHour && option < minimumMinute);
+
+              return (
+                <button
+                  key={option}
+                  type="button"
+                  className={`time-picker__option ${option === selectedMinute ? "time-picker__option--active" : ""} ${isDisabled ? "time-picker__option--disabled" : ""}`.trim()}
+                  onClick={() => updateMinute(option)}
+                  role="option"
+                  aria-selected={option === selectedMinute}
+                  disabled={isDisabled}
+                >
+                  {option}
+                </button>
+              );
+            })}
           </div>
         </div>
       ) : null}

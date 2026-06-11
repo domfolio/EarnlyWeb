@@ -8,6 +8,10 @@ import { formatLongDate, getDateForDay, getDayByKey } from "../utils/dateHelpers
 
 const BREAK_OPTIONS = [0, 15, 30, 45, 60, 90, 120];
 
+function hasInvalidTimeRange(entry = {}) {
+  return Boolean(entry.startTime && entry.endTime && entry.endTime < entry.startTime);
+}
+
 function Entry({ selectedJob, selectedWeekKey, selectedWeekEntries = {}, onEntryChange, error }) {
   const { dayKey } = useParams();
   const navigate = useNavigate();
@@ -18,6 +22,7 @@ function Entry({ selectedJob, selectedWeekKey, selectedWeekEntries = {}, onEntry
   const isEditingNotesRef = useRef(false);
   const lastSavedNotesRef = useRef(entry.notes || "");
   const entryKeyRef = useRef(`${selectedWeekKey}:${day.key}`);
+  const hasInvalidTimes = hasInvalidTimeRange(entry);
   const workedMinutes = calculateWorkedMinutes(entry.startTime, entry.endTime, entry.breakMinutes);
   const pay = calculateEntryPay(entry, selectedJob?.defaultHourlyRate);
 
@@ -111,13 +116,20 @@ function Entry({ selectedJob, selectedWeekKey, selectedWeekEntries = {}, onEntry
           <TimePicker
             label="Start Time"
             value={entry.startTime || ""}
+            className={hasInvalidTimes ? "time-picker--invalid" : ""}
             onChange={(event) => updateField({ startTime: event.target.value })}
           />
           <TimePicker
             label="End Time"
             value={entry.endTime || ""}
+            minTime={entry.startTime || ""}
+            className={hasInvalidTimes ? "time-picker--invalid" : ""}
             onChange={(event) => updateField({ endTime: event.target.value })}
           />
+
+          {hasInvalidTimes ? (
+            <p className="entry-grid__time-warning">End time can&apos;t be before start time.</p>
+          ) : null}
 
           <label className="field entry-grid__break-field">
             <span className="field__label">Break Time</span>

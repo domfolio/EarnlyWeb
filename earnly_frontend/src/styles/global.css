@@ -297,6 +297,21 @@ p {
   color: #fff;
 }
 
+.time-picker__option--disabled,
+.time-picker__option--disabled:hover,
+.time-picker__option:disabled {
+  background: var(--card-soft);
+  color: var(--muted);
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+.time-picker--invalid .time-picker__input,
+.time-picker--invalid .time-picker__toggle {
+  border-color: var(--danger);
+  background: var(--danger-soft);
+}
+
 .form-message {
   border-radius: var(--radius-md);
   font-size: 0.88rem;
@@ -710,6 +725,24 @@ p {
   background: #f9fcfc;
 }
 
+.weekly-table__row--invalid td {
+  background: var(--danger-soft);
+  border-top-color: rgba(200, 93, 93, 0.35);
+  border-bottom: 1px solid rgba(200, 93, 93, 0.35);
+}
+
+.weekly-table__row--invalid td:first-child {
+  border-left: 3px solid var(--danger);
+}
+
+.weekly-table__row--invalid td:last-child {
+  border-right: 1px solid rgba(200, 93, 93, 0.35);
+}
+
+.weekly-table__row--invalid:hover td {
+  background: var(--danger-soft);
+}
+
 .weekly-table__day {
   color: var(--teal-900);
   display: block;
@@ -808,6 +841,14 @@ p {
 
 .entry-grid__break-field {
   align-self: start;
+}
+
+.entry-grid__time-warning {
+  grid-column: 1 / -1;
+  color: var(--danger);
+  font-size: 0.88rem;
+  font-weight: 800;
+  margin: -4px 0 0;
 }
 
 .entry-results {
