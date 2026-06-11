@@ -610,8 +610,9 @@ p {
   border-radius: 999px;
   font-weight: 850;
   margin-bottom: 0;
-  min-width: 138px;
+  width: 180px;
   padding: 7px 12px;
+  white-space: nowrap;
 }
 
 .dashboard-hero__actions,
