@@ -952,10 +952,14 @@ p {
   font-weight: 850;
 }
 
-.export-dialog__presets,
-.export-dialog__toggles {
+.export-dialog__presets {
   display: flex;
   flex-wrap: wrap;
+  gap: 10px;
+}
+
+.export-dialog__toggles {
+  display: grid;
   gap: 10px;
 }
 
@@ -991,6 +995,7 @@ p {
   color: var(--text);
   cursor: pointer;
   font-weight: 750;
+  width: 100%;
 }
 
 .toggle-switch input {

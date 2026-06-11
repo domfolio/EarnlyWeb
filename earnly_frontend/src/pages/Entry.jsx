@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Button from "../components/Button";
 import InputField from "../components/InputField";
@@ -12,11 +13,84 @@ function Entry({ selectedJob, selectedWeekKey, selectedWeekEntries = {}, onEntry
   const navigate = useNavigate();
   const day = getDayByKey(dayKey);
   const entry = selectedWeekEntries?.[day.key] ?? {};
+  const [notesValue, setNotesValue] = useState(entry.notes || "");
+  const notesSaveTimeoutRef = useRef(null);
+  const isEditingNotesRef = useRef(false);
+  const lastSavedNotesRef = useRef(entry.notes || "");
+  const entryKeyRef = useRef(`${selectedWeekKey}:${day.key}`);
   const workedMinutes = calculateWorkedMinutes(entry.startTime, entry.endTime, entry.breakMinutes);
   const pay = calculateEntryPay(entry, selectedJob?.defaultHourlyRate);
 
   function updateField(patch) {
     onEntryChange(day.key, patch);
+  }
+
+  useEffect(() => {
+    const entryKey = `${selectedWeekKey}:${day.key}`;
+    const nextNotes = entry.notes || "";
+    const hasEntryChanged = entryKeyRef.current !== entryKey;
+
+    if (hasEntryChanged) {
+      if (notesSaveTimeoutRef.current) {
+        clearTimeout(notesSaveTimeoutRef.current);
+        notesSaveTimeoutRef.current = null;
+      }
+
+      entryKeyRef.current = entryKey;
+      isEditingNotesRef.current = false;
+      setNotesValue(nextNotes);
+      lastSavedNotesRef.current = nextNotes;
+      return;
+    }
+
+    if (!isEditingNotesRef.current && !notesSaveTimeoutRef.current && nextNotes !== lastSavedNotesRef.current) {
+      setNotesValue(nextNotes);
+      lastSavedNotesRef.current = nextNotes;
+    }
+  }, [day.key, entry.notes, selectedWeekKey]);
+
+  useEffect(() => {
+    return () => {
+      if (notesSaveTimeoutRef.current) clearTimeout(notesSaveTimeoutRef.current);
+    };
+  }, []);
+
+  function saveNotes(nextNotes) {
+    if (nextNotes === lastSavedNotesRef.current) return;
+
+    lastSavedNotesRef.current = nextNotes;
+    updateField({ notes: nextNotes });
+  }
+
+  function scheduleNotesSave(nextNotes) {
+    if (notesSaveTimeoutRef.current) clearTimeout(notesSaveTimeoutRef.current);
+
+    notesSaveTimeoutRef.current = setTimeout(() => {
+      notesSaveTimeoutRef.current = null;
+      saveNotes(nextNotes);
+    }, 500);
+  }
+
+  function handleNotesChange(event) {
+    const nextNotes = event.target.value;
+
+    setNotesValue(nextNotes);
+    scheduleNotesSave(nextNotes);
+  }
+
+  function handleNotesFocus() {
+    isEditingNotesRef.current = true;
+  }
+
+  function handleNotesBlur() {
+    isEditingNotesRef.current = false;
+
+    if (notesSaveTimeoutRef.current) {
+      clearTimeout(notesSaveTimeoutRef.current);
+      notesSaveTimeoutRef.current = null;
+    }
+
+    saveNotes(notesValue);
   }
 
   return (
@@ -77,8 +151,10 @@ function Entry({ selectedJob, selectedWeekKey, selectedWeekEntries = {}, onEntry
           <textarea
             className="field__input field__textarea"
             placeholder="Add anything useful, like public holiday rate or manager notes."
-            value={entry.notes || ""}
-            onChange={(event) => updateField({ notes: event.target.value })}
+            value={notesValue}
+            onChange={handleNotesChange}
+            onFocus={handleNotesFocus}
+            onBlur={handleNotesBlur}
           />
         </label>
 
