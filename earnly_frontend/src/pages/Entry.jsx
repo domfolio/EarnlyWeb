@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import Button from "../components/Button";
 import InputField from "../components/InputField";
+import TimePicker from "../components/TimePicker";
 import { calculateEntryPay, calculateWorkedMinutes, formatCurrency, formatDuration } from "../utils/calculations";
 import { formatLongDate, getDateForDay, getDayByKey } from "../utils/dateHelpers";
 
@@ -33,15 +34,13 @@ function Entry({ selectedJob, selectedWeekKey, selectedWeekEntries = {}, onEntry
       <section className="entry-card">
         {error ? <p className="form-message form-message--error">{error}</p> : null}
         <div className="entry-grid">
-          <InputField
+          <TimePicker
             label="Start Time"
-            type="time"
             value={entry.startTime || ""}
             onChange={(event) => updateField({ startTime: event.target.value })}
           />
-          <InputField
+          <TimePicker
             label="End Time"
-            type="time"
             value={entry.endTime || ""}
             onChange={(event) => updateField({ endTime: event.target.value })}
           />

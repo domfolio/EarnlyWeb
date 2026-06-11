@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import TimePicker from "./TimePicker";
 import { calculateEntryPay, formatCurrency } from "../utils/calculations";
 import { getDateForDay, formatShortDate, WEEK_DAYS } from "../utils/dateHelpers";
 
@@ -48,19 +49,19 @@ function WeeklyTable({ entries, defaultHourlyRate, selectedWeekKey, onEntryChang
                   <span className="weekly-table__date">{formatShortDate(getDateForDay(day.key, selectedWeekKey))}</span>
                 </td>
                 <td onClick={handleTimeClick}>
-                  <input
-                    type="time"
+                  <TimePicker
                     value={entry.startTime || ""}
                     onChange={(event) => updateEntry(day.key, { startTime: event.target.value })}
-                    aria-label={`${day.label} start time`}
+                    ariaLabel={`${day.label} start time`}
+                    className="time-picker--table"
                   />
                 </td>
                 <td onClick={handleTimeClick}>
-                  <input
-                    type="time"
+                  <TimePicker
                     value={entry.endTime || ""}
                     onChange={(event) => updateEntry(day.key, { endTime: event.target.value })}
-                    aria-label={`${day.label} end time`}
+                    ariaLabel={`${day.label} end time`}
+                    className="time-picker--table"
                   />
                 </td>
                 <td onClick={handleTimeClick}>
