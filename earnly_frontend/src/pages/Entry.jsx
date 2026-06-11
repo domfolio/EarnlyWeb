@@ -46,7 +46,7 @@ function Entry({ selectedJob, selectedWeekKey, selectedWeekEntries = {}, onEntry
             onChange={(event) => updateField({ endTime: event.target.value })}
           />
 
-          <label className="field">
+          <label className="field entry-grid__break-field">
             <span className="field__label">Break Time</span>
             <select
               className="field__input"

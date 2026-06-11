@@ -17,6 +17,7 @@ function Dashboard({
   error,
   onSelectJob,
   onMoveWeek,
+  onGoToCurrentWeek,
   onEntryChange,
   onClearWeek,
   onLogout,
@@ -82,6 +83,9 @@ function Dashboard({
               aria-label="Next week"
             >
               ›
+            </button>
+            <button type="button" className="week-nav__today" onClick={onGoToCurrentWeek}>
+              This week
             </button>
           </div>
           <h1>Weekly earnings</h1>

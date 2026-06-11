@@ -164,6 +164,10 @@ function App() {
     setSelectedWeekKey((currentWeekKey) => addWeeksToKey(currentWeekKey, weekOffset));
   }
 
+  function goToCurrentWeek() {
+    setSelectedWeekKey(getWeekKey());
+  }
+
   async function updateJob(jobId, patch) {
     await editJob(jobId, {
       workplaceName: patch.workplaceName,
@@ -256,6 +260,7 @@ function App() {
               error={appError}
               onSelectJob={selectJob}
               onMoveWeek={moveSelectedWeek}
+              onGoToCurrentWeek={goToCurrentWeek}
               onEntryChange={updateEntry}
               onClearWeek={clearCurrentWeek}
               onLogout={handleLogout}
